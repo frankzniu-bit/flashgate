@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- Special access: granted via Settings.ACTION_USAGE_ACCESS_SETTINGS, not a
+       runtime permission dialog. Powers foreground-app + usage detection (§6.5). -->
+  <uses-permission
+    android:name="android.permission.PACKAGE_USAGE_STATS"
+    tools:ignore="ProtectedPermissions" />
+
+  <!-- Android 13+ runtime permission for the foreground service's notification. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+  <application>
+    <service
+      android:name=".UsageMonitorService"
+      android:exported="false"
+      android:foregroundServiceType="specialUse">
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="Screen-time limit monitoring and blocking, user-configured in FlashGate" />
+    </service>
+
+    <!-- Trampoline "shield" activity (§6.5): launched over a guarded app once
+         it's foregrounded past its daily limit. It only redirects into
+         FlashGate's own gate screen and finishes — no UI of its own. -->
+    <activity
+      android:name=".BlockingActivity"
+      android:exported="false"
+      android:launchMode="singleInstance"
+      android:excludeFromRecents="true"
+      android:showWhenLocked="true"
+      android:turnScreenOn="true"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+  </application>
+</manifest>

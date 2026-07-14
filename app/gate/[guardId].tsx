@@ -21,7 +21,7 @@ import { listAllCards, listCardsInDeck, updateCardSchedule } from '../../src/sto
 import { recordReview } from '../../src/storage/reviewLogs';
 import { countUnlocksToday, createGrant } from '../../src/storage/grants';
 import { getGuard, setGuardDeck, setGuardPaused } from '../../src/storage/guards';
-import { mockGuard } from '../../src/guard/mockGuardInstance';
+import { getGuardImplementation } from '../../src/guard/getGuardImplementation';
 import type { DeckCard } from '../../src/storage/types';
 import { colors, spacing } from '../../src/ui/theme';
 
@@ -150,7 +150,7 @@ export default function Gate() {
       const grantedAt = new Date();
       const expiresAt = grantedAt.getTime() + guard.grantMinutes * 60_000;
       createGrant(guard.id, grantedAt.getTime(), expiresAt);
-      void mockGuard.grantWindow(guard.appRef, guard.grantMinutes);
+      void getGuardImplementation(guard.platform).grantWindow(guard.appRef, guard.grantMinutes);
       setPhase({ kind: 'unlocked', expiresAt });
     }
   }

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { countDueCards, listDecks } from '../src/storage/decks';
 import type { Deck } from '../src/storage/types';
@@ -39,6 +39,11 @@ export default function Home() {
           <Pressable onPress={() => router.push('/mock-guard')}>
             <Text style={styles.headerAction}>MockGuard</Text>
           </Pressable>
+          {Platform.OS === 'android' && (
+            <Pressable onPress={() => router.push('/android-guard')}>
+              <Text style={styles.headerAction}>Guard real apps</Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <FlatList
@@ -52,6 +57,11 @@ export default function Home() {
                 <Pressable onPress={() => router.push('/mock-guard')}>
                   <Text style={styles.headerAction}>MockGuard</Text>
                 </Pressable>
+                {Platform.OS === 'android' && (
+                  <Pressable onPress={() => router.push('/android-guard')}>
+                    <Text style={styles.headerAction}>Guard real apps</Text>
+                  </Pressable>
+                )}
                 <Pressable onPress={() => router.push('/import')}>
                   <Text style={styles.headerAction}>Import</Text>
                 </Pressable>
