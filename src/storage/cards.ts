@@ -70,6 +70,39 @@ export function createCard(deckId: string, front: string, back: string): DeckCar
   return { id, deckId, front, back, schedule, suspended: false };
 }
 
+/** Inserts many cards in one transaction (imports, §5) — same schedule
+ * initialization as createCard, just batched for a whole parsed set. */
+export function createCards(deckId: string, cards: { front: string; back: string }[]): DeckCard[] {
+  const db = getDatabase();
+  const created: DeckCard[] = [];
+  db.withTransactionSync(() => {
+    for (const { front, back } of cards) {
+      const id = randomUUID();
+      const schedule = createNewCardSchedule();
+      db.runSync(
+        `INSERT INTO cards
+          (id, deck_id, front, back, fsrs_state, difficulty, stability, scheduled_days, learning_steps, reps, lapses, due_at, last_review_at, suspended)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+        id,
+        deckId,
+        front,
+        back,
+        schedule.state,
+        schedule.difficulty,
+        schedule.stability,
+        schedule.scheduledDays,
+        schedule.learningSteps,
+        schedule.reps,
+        schedule.lapses,
+        schedule.due.getTime(),
+        schedule.lastReview?.getTime() ?? null,
+      );
+      created.push({ id, deckId, front, back, schedule, suspended: false });
+    }
+  });
+  return created;
+}
+
 export function listCardsInDeck(deckId: string): DeckCard[] {
   const db = getDatabase();
   return db

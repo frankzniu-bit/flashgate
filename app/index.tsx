@@ -33,6 +33,9 @@ export default function Home() {
           <Pressable style={styles.primaryButton} onPress={() => router.push('/deck/new')}>
             <Text style={styles.primaryButtonText}>New deck</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/import')}>
+            <Text style={styles.headerAction}>Import from Quizlet, Knowt, or CSV</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
@@ -42,9 +45,14 @@ export default function Home() {
           ListHeaderComponent={
             <View style={styles.header}>
               <Text style={styles.title}>FlashGate</Text>
-              <Pressable onPress={() => router.push('/deck/new')}>
-                <Text style={styles.headerAction}>New deck</Text>
-              </Pressable>
+              <View style={styles.headerActions}>
+                <Pressable onPress={() => router.push('/import')}>
+                  <Text style={styles.headerAction}>Import</Text>
+                </Pressable>
+                <Pressable onPress={() => router.push('/deck/new')}>
+                  <Text style={styles.headerAction}>New deck</Text>
+                </Pressable>
+              </View>
             </View>
           }
           renderItem={({ item }) => (
@@ -80,6 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing(6),
   },
+  headerActions: { flexDirection: 'row', gap: spacing(4) },
   title: { fontSize: 28, fontWeight: '600', color: colors.text, letterSpacing: -0.5 },
   headerAction: { fontSize: 16, color: colors.accent, fontWeight: '500' },
   body: { fontSize: 16, lineHeight: 24, color: colors.textMuted, textAlign: 'center', maxWidth: 320 },
