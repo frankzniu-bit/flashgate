@@ -110,6 +110,14 @@ export function listCardsInDeck(deckId: string): DeckCard[] {
     .map(fromRow);
 }
 
+/** All non-suspended cards across every deck — the gate's "all decks" toll
+ * source (§3.5) and the pool for multiple-choice distractors when a single
+ * deck is too small (§4.4). */
+export function listAllCards(): DeckCard[] {
+  const db = getDatabase();
+  return db.getAllSync<CardRow>('SELECT * FROM cards WHERE suspended = 0 ORDER BY due_at ASC').map(fromRow);
+}
+
 export function getCard(id: string): DeckCard | null {
   const db = getDatabase();
   const row = db.getFirstSync<CardRow>('SELECT * FROM cards WHERE id = ?', id);

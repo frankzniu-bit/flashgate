@@ -36,6 +36,9 @@ export default function Home() {
           <Pressable onPress={() => router.push('/import')}>
             <Text style={styles.headerAction}>Import from Quizlet, Knowt, or CSV</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/mock-guard')}>
+            <Text style={styles.headerAction}>MockGuard</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
@@ -46,6 +49,9 @@ export default function Home() {
             <View style={styles.header}>
               <Text style={styles.title}>FlashGate</Text>
               <View style={styles.headerActions}>
+                <Pressable onPress={() => router.push('/mock-guard')}>
+                  <Text style={styles.headerAction}>MockGuard</Text>
+                </Pressable>
                 <Pressable onPress={() => router.push('/import')}>
                   <Text style={styles.headerAction}>Import</Text>
                 </Pressable>

@@ -28,3 +28,22 @@ export interface ReviewLogEntry {
   elapsedMs: number;
   reviewedAt: Date;
 }
+
+export interface Guard {
+  id: string;
+  appRef: string;
+  platform: string;
+  dailyLimitMin: number;
+  deckId: string | null;
+  tollCards: number;
+  grantMinutes: number;
+  escalationOn: boolean;
+  paused: boolean;
+}
+
+export interface GrantRecord {
+  id: string;
+  guardId: string;
+  grantedAt: Date;
+  expiresAt: Date;
+}

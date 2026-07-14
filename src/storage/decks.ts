@@ -63,3 +63,22 @@ export function countDueCards(deckId: string, now: number = Date.now()): number 
   );
   return row?.count ?? 0;
 }
+
+/** True if the deck exists and has at least one (non-suspended) card. Used
+ * by the gate's toll-source fallback (§3.5). */
+export function deckHasCards(deckId: string): boolean {
+  const db = getDatabase();
+  const row = db.getFirstSync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM cards WHERE deck_id = ? AND suspended = 0',
+    deckId,
+  );
+  return (row?.count ?? 0) > 0;
+}
+
+/** True if any deck anywhere has a card — the last resort before a guard
+ * must pause itself (§3.5). */
+export function anyCardsExistAnywhere(): boolean {
+  const db = getDatabase();
+  const row = db.getFirstSync<{ count: number }>('SELECT COUNT(*) as count FROM cards WHERE suspended = 0');
+  return (row?.count ?? 0) > 0;
+}

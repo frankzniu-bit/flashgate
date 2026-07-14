@@ -1,10 +1,13 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-// §6.7 sketches decks/cards/review_logs/settings; guards/grants/unlocks_today
-// are added in Phase 3 once the toll engine needs them. Card columns beyond
-// the sketch (scheduled_days, learning_steps, reps, lapses) are bookkeeping
-// FSRS needs to schedule correctly — see packages/domain/src/scheduler.ts.
-const CURRENT_VERSION = 1;
+// §6.7 sketches decks/cards/review_logs/settings/guards/grants. Card columns
+// beyond the sketch (scheduled_days, learning_steps, reps, lapses) are
+// bookkeeping FSRS needs to schedule correctly — see
+// packages/domain/src/scheduler.ts. `unlocks_today` isn't a separate table
+// (the sketch allows deriving it from grants) — see
+// src/storage/grants.ts#countUnlocksToday, which groups grants by
+// packages/domain/src/tollEngine.ts#rolloverDayKey.
+const CURRENT_VERSION = 2;
 
 const MIGRATIONS: Record<number, string> = {
   1: `
@@ -50,6 +53,27 @@ const MIGRATIONS: Record<number, string> = {
       key TEXT PRIMARY KEY NOT NULL,
       value TEXT NOT NULL
     );
+  `,
+  2: `
+    CREATE TABLE guards (
+      id TEXT PRIMARY KEY NOT NULL,
+      app_ref TEXT NOT NULL,
+      platform TEXT NOT NULL DEFAULT 'mock',
+      daily_limit_min INTEGER NOT NULL,
+      deck_id TEXT REFERENCES decks(id) ON DELETE SET NULL,
+      toll_cards INTEGER NOT NULL DEFAULT 5,
+      grant_minutes INTEGER NOT NULL DEFAULT 10,
+      escalation_on INTEGER NOT NULL DEFAULT 1,
+      paused INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE grants (
+      id TEXT PRIMARY KEY NOT NULL,
+      guard_id TEXT NOT NULL REFERENCES guards(id) ON DELETE CASCADE,
+      granted_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL
+    );
+    CREATE INDEX idx_grants_guard_id ON grants(guard_id);
   `,
 };
 
