@@ -39,7 +39,8 @@ export interface CardSchedule {
 
 export interface ScheduleResult {
   schedule: CardSchedule;
-  elapsedDays: number;
+  /** Days until the next review, from the FSRS log for this rating. */
+  scheduledDays: number;
 }
 
 const scheduler = fsrs();
@@ -92,7 +93,7 @@ export function scheduleReview(
   now: Date,
 ): ScheduleResult {
   const { card, log } = scheduler.next(toFsrsCardInput(schedule), now, GRADE_BY_RATING[rating]);
-  return { schedule: fromFsrsCard(card), elapsedDays: log.scheduled_days };
+  return { schedule: fromFsrsCard(card), scheduledDays: log.scheduled_days };
 }
 
 /** Probability of recall right now, in [0, 1] — used to order due Review

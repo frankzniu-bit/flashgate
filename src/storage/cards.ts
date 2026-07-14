@@ -103,10 +103,26 @@ export function createCards(deckId: string, cards: { front: string; back: string
   return created;
 }
 
+/** Every card in the deck, including suspended ones — for the deck editor,
+ * where hiding suspended cards would make them uneditable. Study and gate
+ * queues must use listStudyCards instead. */
 export function listCardsInDeck(deckId: string): DeckCard[] {
   const db = getDatabase();
   return db
     .getAllSync<CardRow>('SELECT * FROM cards WHERE deck_id = ? ORDER BY due_at ASC', deckId)
+    .map(fromRow);
+}
+
+/** Non-suspended cards in one deck — the pool study sessions and deck-scoped
+ * gate sessions draw from, matching the suspended filter that countDueCards,
+ * deckHasCards, and listAllCards already apply. */
+export function listStudyCards(deckId: string): DeckCard[] {
+  const db = getDatabase();
+  return db
+    .getAllSync<CardRow>(
+      'SELECT * FROM cards WHERE deck_id = ? AND suspended = 0 ORDER BY due_at ASC',
+      deckId,
+    )
     .map(fromRow);
 }
 

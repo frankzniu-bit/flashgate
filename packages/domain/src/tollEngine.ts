@@ -157,6 +157,19 @@ export function rolloverDayKey(now: Date, rolloverHour: number = 4): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** Epoch ms at which "today" (per the same rollover boundary as
+ * rolloverDayKey) began. The single day-start definition for anything that
+ * counts per-day activity — new-card caps, unlock counts — so the app never
+ * mixes a midnight boundary with the 4am one. */
+export function rolloverDayStartMs(now: Date, rolloverHour: number = 4): number {
+  const d = new Date(now.getTime());
+  if (d.getHours() < rolloverHour) {
+    d.setDate(d.getDate() - 1);
+  }
+  d.setHours(rolloverHour, 0, 0, 0);
+  return d.getTime();
+}
+
 // ---------------------------------------------------------------------------
 // Grants and clock tampering (§3.5)
 // ---------------------------------------------------------------------------

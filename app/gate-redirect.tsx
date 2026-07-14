@@ -16,7 +16,10 @@ export default function GateRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!pkg) {
+    // The deep link is an OS-level entry point any app can fire; accept
+    // only something shaped like an Android package name before touching
+    // storage with it.
+    if (!pkg || pkg.length > 256 || !/^[a-zA-Z0-9._]+$/.test(pkg)) {
       router.replace('/');
       return;
     }

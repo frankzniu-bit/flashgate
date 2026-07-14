@@ -10,6 +10,7 @@ import {
   MIN_DISPLAY_MS,
   planGateSession,
   resolveTollSource,
+  rolloverDayStartMs,
   scheduleReview,
   startGateSession,
   tollSizeForUnlock,
@@ -17,7 +18,7 @@ import {
   type MultipleChoiceQuestion,
 } from '@flashgate/domain';
 import { anyCardsExistAnywhere, deckHasCards, getDeck } from '../../src/storage/decks';
-import { listAllCards, listCardsInDeck, updateCardSchedule } from '../../src/storage/cards';
+import { countNewCardsIntroducedToday, listAllCards, listStudyCards, updateCardSchedule } from '../../src/storage/cards';
 import { recordReview } from '../../src/storage/reviewLogs';
 import { countUnlocksToday, createGrant } from '../../src/storage/grants';
 import { getGuard, setGuardDeck, setGuardPaused } from '../../src/storage/guards';
@@ -107,17 +108,20 @@ export default function Gate() {
 
   function startSession() {
     if (!guard) return;
-    const source = guard.deckId ? listCardsInDeck(guard.deckId) : listAllCards();
+    const source = guard.deckId ? listStudyCards(guard.deckId) : listAllCards();
     const map = new Map(source.map((c) => [c.id, c]));
     setCardsById(map);
 
-    const unlockNumberToday = countUnlocksToday(guard.id, new Date()) + 1;
+    const now = new Date();
+    const unlockNumberToday = countUnlocksToday(guard.id, now) + 1;
     const tollSize = tollSizeForUnlock(guard.tollCards, unlockNumberToday, guard.escalationOn);
     const deck = guard.deckId ? getDeck(guard.deckId) : null;
     const selectable = source.map((c) => ({ id: c.id, schedule: c.schedule }));
     const plan = planGateSession(selectable, tollSize, {
-      now: new Date(),
-      newCardsIntroducedToday: 0,
+      now,
+      newCardsIntroducedToday: guard.deckId
+        ? countNewCardsIntroducedToday(guard.deckId, rolloverDayStartMs(now))
+        : 0,
       newCardsPerDayCap: deck?.newCardsPerDay ?? DEFAULT_NEW_CARDS_PER_DAY_CAP,
     });
 
@@ -129,9 +133,8 @@ export default function Gate() {
     setPhase({ kind: 'session' });
   }
 
-  function submitAnswer(correct: string | boolean) {
+  function submitAnswer(isCorrect: boolean) {
     if (!guard || !gateState || !currentCard) return;
-    const isCorrect = typeof correct === 'boolean' ? correct : correct === currentCard.back;
 
     const reviewedAt = new Date();
     const elapsedMs = reviewedAt.getTime() - shownAt.current;

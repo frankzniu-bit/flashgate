@@ -82,6 +82,16 @@ class UsageMonitorService : Service() {
 
     val guards = GuardBridge.guards
     val foregroundPackage = currentForegroundPackage
+
+    // lastBlockedPackage only exists to stop the shield relaunching every
+    // tick while it's already up. Clear it as soon as the situation changes
+    // — different foreground app, or an active grant — otherwise the shield
+    // would never RETURN after a grant expires while the user is still
+    // inside the guarded app (the §3.3 expiry -> re-block step).
+    if (lastBlockedPackage != null && lastBlockedPackage != foregroundPackage) {
+      lastBlockedPackage = null
+    }
+
     if (foregroundPackage == null || foregroundPackage == packageName) return
 
     val dailyLimitMin = guards[foregroundPackage] ?: return
@@ -89,7 +99,10 @@ class UsageMonitorService : Service() {
       (accumulatedMsToday[foregroundPackage] ?: 0L) + (now - currentForegroundSinceMs)
 
     if (liveElapsedMs < dailyLimitMin * 60_000L) return
-    if (GuardBridge.isGranted(foregroundPackage, now)) return
+    if (GuardBridge.isGranted(foregroundPackage, now)) {
+      lastBlockedPackage = null
+      return
+    }
     if (lastBlockedPackage == foregroundPackage) return // already showing the shield
 
     lastBlockedPackage = foregroundPackage

@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { selectStudyQueue, scheduleReview, type ReviewRating } from '@flashgate/domain';
+import { rolloverDayStartMs, selectStudyQueue, scheduleReview, type ReviewRating } from '@flashgate/domain';
 import { getDeck } from '../../src/storage/decks';
-import { countNewCardsIntroducedToday, listCardsInDeck, updateCardSchedule } from '../../src/storage/cards';
+import { countNewCardsIntroducedToday, listStudyCards, updateCardSchedule } from '../../src/storage/cards';
 import { recordReview } from '../../src/storage/reviewLogs';
 import type { DeckCard } from '../../src/storage/types';
 import { colors, spacing } from '../../src/ui/theme';
@@ -15,17 +15,13 @@ const RATINGS: { rating: ReviewRating; label: string }[] = [
   { rating: 'Easy', label: 'Easy' },
 ];
 
-function startOfToday(now: Date): number {
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-}
-
 export default function StudySession() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const router = useRouter();
 
   const [cardsById] = useState(() => {
     const map = new Map<string, DeckCard>();
-    if (deckId) for (const c of listCardsInDeck(deckId)) map.set(c.id, c);
+    if (deckId) for (const c of listStudyCards(deckId)) map.set(c.id, c);
     return map;
   });
 
@@ -36,7 +32,8 @@ export default function StudySession() {
     const selectable = Array.from(cardsById.values()).map((c) => ({ id: c.id, schedule: c.schedule }));
     const ordered = selectStudyQueue(selectable, {
       now,
-      newCardsIntroducedToday: countNewCardsIntroducedToday(deckId, startOfToday(now)),
+      // Same 4am rollover boundary as the toll engine (§3.4) — not midnight.
+      newCardsIntroducedToday: countNewCardsIntroducedToday(deckId, rolloverDayStartMs(now)),
       newCardsPerDayCap: deck?.newCardsPerDay ?? 10,
     });
     return ordered.map((c) => c.id);

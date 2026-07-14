@@ -9,6 +9,7 @@ import {
   planGateSession,
   resolveTollSource,
   rolloverDayKey,
+  rolloverDayStartMs,
   shouldExpireAllGrantsForClockJump,
   startGateSession,
   tollSizeForUnlock,
@@ -185,6 +186,25 @@ describe('toll escalation — §3.4', () => {
 
   it('caps at 15', () => {
     expect(tollSizeForUnlock(5, 20, true)).toBe(15);
+  });
+});
+
+describe('rolloverDayStartMs — shared day-start for per-day counters', () => {
+  it('is 4am of the same calendar day for times after the rollover hour', () => {
+    const afternoon = new Date('2026-01-02T15:00:00');
+    expect(rolloverDayStartMs(afternoon, 4)).toBe(new Date('2026-01-02T04:00:00').getTime());
+  });
+
+  it('is 4am of the PREVIOUS calendar day for times before the rollover hour', () => {
+    const lateNight = new Date('2026-01-02T02:30:00');
+    expect(rolloverDayStartMs(lateNight, 4)).toBe(new Date('2026-01-01T04:00:00').getTime());
+  });
+
+  it('agrees with rolloverDayKey about day membership at the boundary', () => {
+    const justBefore = new Date('2026-01-02T03:59:59');
+    const atRollover = new Date('2026-01-02T04:00:00');
+    expect(rolloverDayStartMs(justBefore, 4)).toBeLessThan(rolloverDayStartMs(atRollover, 4));
+    expect(rolloverDayStartMs(atRollover, 4)).toBe(atRollover.getTime());
   });
 });
 
