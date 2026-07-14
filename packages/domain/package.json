@@ -13,5 +13,8 @@
   "devDependencies": {
     "typescript": "~6.0.3",
     "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "ts-fsrs": "^5.4.1"
   }
 }
